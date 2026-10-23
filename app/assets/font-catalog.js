@@ -1,1 +1,1 @@
-window.CleanFramePrivateFontIDs = ['geist', 'newsreader'];
+window.CleanFramePrivateFontIDs = ['geist', 'newsreader', 'sfpro'];

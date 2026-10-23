@@ -1,3 +1,7 @@
 /* Open Font License fonts. Source and licence details are in fonts/. */
 @font-face{font-family:'Study Geist';font-style:normal;font-weight:300 400;src:url('fonts/geist/Geist-Variable.ttf') format('truetype');font-display:block;size-adjust:101.408451%;ascent-override:105.119444%;descent-override:29.583333%;line-gap-override:0%}
 @font-face{font-family:'Study Newsreader';font-style:normal;font-weight:400;src:url('fonts/newsreader/Newsreader-Variable.ttf') format('truetype');font-display:block;size-adjust:107.462687%;ascent-override:99.197222%;descent-override:27.916667%;line-gap-override:0%}
+@font-face{font-family:'SF Pro';font-style:normal;font-weight:400;src:url('fonts/sf-pro/SF-Pro-Display-Regular.otf') format('opentype');font-display:block;}
+@font-face{font-family:'SF Pro';font-style:normal;font-weight:500;src:url('fonts/sf-pro/SF-Pro-Display-Medium.otf') format('opentype');font-display:block;}
+@font-face{font-family:'SF Pro';font-style:normal;font-weight:600;src:url('fonts/sf-pro/SF-Pro-Display-Semibold.otf') format('opentype');font-display:block;}
+

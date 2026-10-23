@@ -5,17 +5,18 @@ mode=sys.argv[1] if len(sys.argv)>1 else 'query'
 if mode not in ['query','apply','restore','inspect']:raise SystemExit('Unknown action')
 host=json.loads((r/'.local/device.json').read_text())['host'];ipaddress.ip_address(host)
 with urllib.request.urlopen('http://'+host+':8001/api/v2/',timeout=4) as response: info=json.load(response)
-if info.get('device',{}).get('modelName')!='QA55LS03DAWXXY':raise SystemExit('Model guard failed; nothing staged.')
-sdb=str(r/'.local/tizen-sdk/tools/sdb');serial=host+':26101'
+if info.get('device',{}).get('modelName') not in ['QA55LS03DAWXXY', 'QA65LS03DAULXL']:raise SystemExit('Model guard failed; nothing staged.')
+sdb=str(r/'.local/tizen-sdk/tools/sdb.exe');serial=host+':26101'
 def run(args,timeout=12):
  p=subprocess.run([sdb,*args],capture_output=True,text=True,timeout=timeout)
  if p.returncode:raise RuntimeError('SDB transport failed: '+p.stdout[-300:]+p.stderr[-300:])
  return p
 run(['connect',serial])
 # Re-stage reviewed helper files on each run so rollback survives SDK temporary-file cleanup.
-for suffix in ['dll','runtimeconfig.json','deps.json']:
-    source=d/'out'/('CleanFrameHomeControl.'+suffix)
-    run(['-s',serial,'push',str(source),'/home/owner/share/tmp/sdk_tools/CleanFrameHomeControl.'+suffix])
+if mode != 'inspect':
+ for suffix in ['dll','runtimeconfig.json','deps.json']:
+     source=d/'out'/('CleanFrameHomeControl.'+suffix)
+     run(['-s',serial,'push',str(source),'/home/owner/share/tmp/sdk_tools/CleanFrameHomeControl.'+suffix])
 if mode in ['apply','restore']:
     run(['-s',serial,'push',str(d/'original.json'),'/home/owner/share/tmp/sdk_tools/CleanFrameHomeOriginal.json'])
 token=uuid.uuid4().hex[:12];remote='/home/owner/share/tmp/sdk_tools/cfhi-'+token+'.sh'

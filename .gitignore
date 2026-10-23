@@ -27,3 +27,12 @@ PP*.woff2
 /explorations/
 /docs/research/
 /docs/articles/
+
+# Local build and signature outputs
+app/author-signature.xml
+app/signature1.xml
+app/.manifest.tmp
+dotnet-install.ps1
+launch-certificate-manager.bat
+**/bin/
+**/obj/
