@@ -698,37 +698,59 @@
   };
 
   /* ---------- Installed apps ---------- */
-  function appsItems() { return catalog.error ? [] : ALPHA; }
-  function appsHead() { return catalog.error ? [['retry', 'Try again', '', '']] : [['editor', 'Apps on Home', '', 'home']]; }
+  function appsItems() {
+    if (catalog.error) return [];
+    var items = ALPHA.slice();
+    if (!onHome('settings') && items.indexOf('settings') < 0) {
+      items.push('settings');
+      items.sort(function (a, b) { return app(a).name.toLowerCase().localeCompare(app(b).name.toLowerCase()); });
+    }
+    return items;
+  }
+  function appsHead() { return catalog.error ? [['retry', 'Try again', '', '']] : []; }
   V.apps = {
     sheet: true,
     norm: function (t) {
       var n = appsItems().length;
       t.f.i = clamp(t.f.i, 0, Math.max(0, n - 1));
-      if (!n) t.f.zone = 'head';
+      if (!n && catalog.error) t.f.zone = 'head';
+      else if (t.f.zone === 'head' && !catalog.error) t.f.zone = 'grid';
     },
     key: function (t, k) {
       var f = t.f, items = appsItems(), n = items.length, col = f.i % COLS, row = Math.floor(f.i / COLS);
       if (k === 'back') { pop(); return; }
       if (f.zone === 'head') {
         if (k === 'down' && n) f.zone = 'grid';
-        else if (k === 'ok') { if (catalog.error) refreshCatalog(); else openEditor('apps'); }
+        else if (k === 'ok') { if (catalog.error) refreshCatalog(); }
         return;
       }
       if (k === 'left' && col > 0) f.i--;
       else if (k === 'right' && col < COLS - 1 && f.i < n - 1) f.i++;
       else if (k === 'down' && row < Math.ceil(n / COLS) - 1) f.i = Math.min(f.i + COLS, n - 1);
-      else if (k === 'up') { if (row > 0) f.i -= COLS; else f.zone = 'head'; }
+      else if (k === 'up') {
+        if (row > 0) f.i -= COLS;
+        else if (catalog.error) f.zone = 'head';
+      }
       else if (k === 'ok' && n) launch(items[f.i]);
       S.appsFocus = items[f.i] || null;
     },
-    point: function (t, z, i) { if (z === 'grid') { t.f.zone = 'grid'; t.f.i = i; } else if (z === 'head') t.f.zone = 'head'; else return; this.key(t, 'ok'); }
+    point: function (t, z, i) {
+      if (z === 'grid') { t.f.zone = 'grid'; t.f.i = i; }
+      else if (z === 'head' && catalog.error) t.f.zone = 'head';
+      else return;
+      this.key(t, 'ok');
+    }
   };
 
   /* ---------- B: two-zone Home editor ---------- */
   function otherGroups() {
     var rec = S.c.recent.filter(function (id) { return !onHome(id) && app(id); });
-    return { recent: rec, rest: ALPHA.filter(function (id) { return !onHome(id) && rec.indexOf(id) < 0; }) };
+    var rest = ALPHA.filter(function (id) { return !onHome(id) && rec.indexOf(id) < 0; });
+    if (!onHome('settings') && rec.indexOf('settings') < 0 && rest.indexOf('settings') < 0) {
+      rest.push('settings');
+      rest.sort(function (a, b) { return app(a).name.toLowerCase().localeCompare(app(b).name.toLowerCase()); });
+    }
+    return { recent: rec, rest: rest };
   }
   function otherList() { var o = otherGroups(); return o.recent.concat(o.rest); }
   function editorCut() { return 999; }
@@ -1561,21 +1583,22 @@
     }
   };
   function gridTileHtml(id) {
-    var a = app(id), state = onHome(id) ? badge(true) + '<span>On Home</span>' : '';
-    return '<span class="panel-content">' + appMark(a, 120, 72, 58) + '<span class="label">' + esc(a.name) + '</span></span><span class="state">' + state + '</span>';
+    var a = app(id);
+    return '<span class="panel-content">' + appMark(a, 120, 72, 58) + '<span class="label">' + esc(a.name) + '</span></span>';
   }
   var FILLS = {
     apps: function (t, el) {
       var f = t.f, items = appsItems(), n = items.length, rows = Math.ceil(n / COLS), vis = 3, row = Math.floor(f.i / COLS);
+      var headItems = appsHead();
       setHTML(el.title, 'All apps');
       setHTML(el.sub, esc(catalog.loading ? 'Loading installed apps…' : catalog.error || (!n ? 'No installed apps found.' : '')));
-      setHTML(el.head, headButtons(appsHead(), f.zone === 'head' ? 0 : -1, 'apps'));
-      el.head.className = 's-head' + (f.zone === 'head' ? ' is-awake' : '');
+      setHTML(el.head, headButtons(headItems, f.zone === 'head' ? 0 : -1, 'apps'));
+      el.head.className = 's-head' + (f.zone === 'head' ? ' is-awake' : '') + (!headItems.length ? ' is-empty' : '');
       if (f.zone === 'grid') { if (row < t.top) t.top = row; if (row > t.top + vis - 1) t.top = row - vis + 1; }
       t.top = clamp(t.top, 0, Math.max(0, rows - vis));
       keyed(el.grid, items.map(function (id) { return { key: id, id: id }; }), function (tile, it, i) {
         var focus = f.zone === 'grid' && i === f.i;
-        setContent(tile, [it.id, app(it.id).name, onHome(it.id)].join('|'), gridTileHtml(it.id));
+        setContent(tile, [it.id, app(it.id).name].join('|'), gridTileHtml(it.id));
         tile.className = 'gt' + (focus ? ' is-focus' : '');
         tile.style.transform = 'translate3d(' + ((i % COLS) * GRID_COL) + 'px,' + (Math.floor(i / COLS) * GRID_ROW) + 'px,0)';
         tile.setAttribute('role', 'button'); tile.setAttribute('aria-label', app(it.id).name);
