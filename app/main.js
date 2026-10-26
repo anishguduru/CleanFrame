@@ -701,7 +701,7 @@
   function appsItems() {
     if (catalog.error) return [];
     var items = ALPHA.slice();
-    if (!onHome('settings') && items.indexOf('settings') < 0) {
+    if (items.indexOf('settings') < 0) {
       items.push('settings');
       items.sort(function (a, b) { return app(a).name.toLowerCase().localeCompare(app(b).name.toLowerCase()); });
     }
