@@ -41,7 +41,7 @@ class Control {
    if(before.Home!=original.Home||before.Autostart!=original.Autostart)throw new Exception("Configuration changed since snapshot");
    foreach(var k in Keys)if(before.Strings[k]!=original.Strings[k])throw new Exception("Setting changed since snapshot: "+k);
    if(!Directory.Exists("/opt/usr/apps/nClrkHome1")||before.BootSupported==0)throw new Exception("Installed launcher is not eligible for boot");
-   try{SetHome(Target);SetString("db/appfw/home_appid",Target);SetAuto(1);Console.WriteLine("CLEANFRAME_HOME_APPLIED="+JsonSerializer.Serialize(Query()));}
+   try{SetHome(Target);SetString("db/appfw/home_appid",Target);SetString("db/first_screen/type",Target);SetAuto(1);Console.WriteLine("CLEANFRAME_HOME_APPLIED="+JsonSerializer.Serialize(Query()));}
    catch{Restore(original);Console.Error.WriteLine("Original Home/startup values restored after a failed apply");throw;}
    return 0;
   }catch(Exception e){Console.Error.WriteLine(e.ToString());return 1;}

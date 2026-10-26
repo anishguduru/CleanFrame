@@ -336,6 +336,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .er-rm.is-limit{color:var(--warn)}
 .er-rm.is-limit.is-focus{color:var(--solid-warn)}
 .er.is-lifted .er-rm{visibility:hidden}
+.er.is-fixed .er-move,.er.is-fixed .er-rm{display:none!important}
+.er.is-disabled{opacity:.35;color:var(--faint)}
+.er.is-disabled .er-name{opacity:.55}
+.er.is-disabled.is-active .er-name{background:none;box-shadow:none}
+.at-editor .s-sub{display:none!important}
 .mark-sp{width:56px;height:44px;flex:none}
 .ed-other-view{position:absolute;left:1040px;top:264px;width:768px;height:752px;overflow:hidden}
 .ed-other{position:absolute;left:0;top:0;width:768px;transition:transform var(--t) var(--ease)}
@@ -574,27 +579,105 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000}
 .l-list .quiet-utils.is-text .u-label{max-width:330px}
 .l-list .quiet-utils.is-text .u-content{gap:0}
 
-/* Selected fonts affect Home only. Settings, editors and status retain Manrope. */
-.home{font-synthesis:none}
-.font-custom .home{font-family:var(--font-ui-family),sans-serif;font-weight:var(--font-ui-weight)}
-.font-custom .home .ph-name{font-family:var(--font-display-family),sans-serif;font-weight:var(--font-display-weight);letter-spacing:-.01em}
-.font-custom .home .clock{position:relative;top:var(--font-clock-shift);font-family:var(--font-display-family),sans-serif;font-weight:var(--font-clock-weight);letter-spacing:-.01em}
-.font-custom .home .tile .label,.font-custom .home .app-focus-name,.font-custom .home .full-name{font-family:var(--font-primary-family),sans-serif;font-weight:var(--font-primary-weight);letter-spacing:0}
-.font-custom .home .u,.font-custom .home .util-focus-label,.font-custom .home .cap-title,.font-custom .home .dock-action,.font-custom .home .ph-action,.font-custom .home .btn,.font-custom .home .dock-empty p,.font-custom .home .ph-empty p{font-family:var(--font-ui-family),sans-serif;font-weight:var(--font-ui-weight);letter-spacing:0}
-.font-custom .home .cap-title{position:relative;top:var(--font-heading-shift)}
-.font-custom .home .full-name{position:relative;top:var(--font-full-name-shift)}
-.font-custom .home .quiet-utils .u-label{position:relative;top:var(--font-utility-shift)}
-.font-custom.l-list .home .quiet-utils .u-label{top:calc(-1px + var(--font-utility-shift))}
-.font-custom .home .ph-action>span,.font-custom .home .dock-action>span{position:relative;top:var(--font-action-shift)}
-.home .monogram,.home .cap-count,.home .cap-line:not(.full-name),.home .wall-keep,.home .error-chip{font-family:Manrope,Arial,sans-serif}
-.font-newsreader .home{font-variation-settings:"opsz" 28;font-optical-sizing:none}
-.font-newsreader .home .ph-name{font-variation-settings:"opsz" 72;font-optical-sizing:none}
-.font-newsreader .home .clock{font-variation-settings:"opsz" 48;font-optical-sizing:none}
-.font-newsreader .home .tile .label,.font-newsreader .home .app-focus-name,.font-newsreader .home .full-name{font-variation-settings:"opsz" 36;font-optical-sizing:none}
-.font-newsreader .home .cap-title,.font-newsreader .home .header-utils,.font-newsreader .home .dock-action,.font-newsreader .home .ph-action,.font-newsreader .home .btn,.font-newsreader .home .dock-empty p,.font-newsreader .home .ph-empty p{font-variation-settings:"opsz" 36}
-.font-newsreader .home .wall-keep{font-family:var(--font-ui-family),serif;font-weight:400;font-variation-settings:"opsz" 36;letter-spacing:0}
-.font-newsreader .home .header-utils .u-label,.font-newsreader .home .wall-keep{position:relative;top:var(--font-action-shift)}
-.clock-digit{display:inline-block;width:var(--font-clock-digit);text-align:center;letter-spacing:0}
+/* Selected fonts apply everywhere (Home, Settings, sheets, dialogs). Typography options keep individual fonts. */
+.stage, .home, .appearance, .sheet { font-synthesis: none; }
+.font-custom {
+  font-family: var(--font-ui-family), sans-serif;
+  font-weight: var(--font-ui-weight);
+}
+.font-custom .home {
+  font-family: var(--font-ui-family), sans-serif;
+  font-weight: var(--font-ui-weight);
+}
+.font-custom .home .ph-name {
+  font-family: var(--font-display-family), sans-serif;
+  font-weight: var(--font-display-weight);
+  letter-spacing: -.01em;
+}
+.font-custom .home .clock {
+  position: relative;
+  top: var(--font-clock-shift);
+  font-family: var(--font-display-family), sans-serif;
+  font-weight: var(--font-clock-weight);
+  letter-spacing: -.01em;
+}
+.font-custom .home .tile .label,
+.font-custom .home .app-focus-name,
+.font-custom .home .full-name {
+  font-family: var(--font-primary-family), sans-serif;
+  font-weight: var(--font-primary-weight);
+  letter-spacing: 0;
+}
+.font-custom .home .u,
+.font-custom .home .util-focus-label,
+.font-custom .home .cap-title,
+.font-custom .home .dock-action,
+.font-custom .home .ph-action,
+.font-custom .home .btn,
+.font-custom .home .dock-empty p,
+.font-custom .home .ph-empty p {
+  font-family: var(--font-ui-family), sans-serif;
+  font-weight: var(--font-ui-weight);
+  letter-spacing: 0;
+}
+.font-custom .s-title,
+.font-custom .settings-title,
+.font-custom .appearance-desc {
+  font-family: var(--font-display-family), sans-serif;
+  font-weight: var(--font-display-weight);
+}
+.font-custom .settings-group,
+.font-custom .settings-group-name,
+.font-custom .settings-group-value,
+.font-custom .setting-choice,
+.font-custom .setting-name:not([style*="font-family"]),
+.font-custom .setting-description,
+.font-custom .setting-reason,
+.font-custom .s-label,
+.font-custom .s-head,
+.font-custom .er,
+.font-custom .eo,
+.font-custom .btn,
+.font-custom .msg-title,
+.font-custom .msg-line,
+.font-custom .msg-note {
+  font-family: var(--font-ui-family), sans-serif;
+  font-weight: var(--font-ui-weight);
+}
+.font-custom .home .cap-title { position: relative; top: var(--font-heading-shift); }
+.font-custom .home .full-name { position: relative; top: var(--font-full-name-shift); }
+.font-custom .home .quiet-utils .u-label { position: relative; top: var(--font-utility-shift); }
+.font-custom.l-list .home .quiet-utils .u-label { top: calc(-1px + var(--font-utility-shift)); }
+.font-custom .home .ph-action > span,
+.font-custom .home .dock-action > span { position: relative; top: var(--font-action-shift); }
+.home .monogram,
+.home .cap-count,
+.home .cap-line:not(.full-name),
+.home .wall-keep,
+.home .error-chip { font-family: Manrope, Arial, sans-serif; }
+.font-newsreader {
+  font-variation-settings: "opsz" 28;
+  font-optical-sizing: none;
+}
+.font-newsreader .home { font-variation-settings: "opsz" 28; font-optical-sizing: none; }
+.font-newsreader .home .ph-name { font-variation-settings: "opsz" 72; font-optical-sizing: none; }
+.font-newsreader .home .clock { font-variation-settings: "opsz" 48; font-optical-sizing: none; }
+.font-newsreader .home .tile .label,
+.font-newsreader .home .app-focus-name,
+.font-newsreader .home .full-name { font-variation-settings: "opsz" 36; font-optical-sizing: none; }
+.font-newsreader .home .cap-title,
+.font-newsreader .home .header-utils,
+.font-newsreader .home .dock-action,
+.font-newsreader .home .ph-action,
+.font-newsreader .home .btn,
+.font-newsreader .home .dock-empty p,
+.font-newsreader .home .ph-empty p,
+.font-newsreader .s-title,
+.font-newsreader .settings-title { font-variation-settings: "opsz" 36; }
+.font-newsreader .home .wall-keep { font-family: var(--font-ui-family), serif; font-weight: 400; font-variation-settings: "opsz" 36; letter-spacing: 0; }
+.font-newsreader .home .header-utils .u-label,
+.font-newsreader .home .wall-keep { position: relative; top: var(--font-action-shift); }
+.clock-digit { display: inline-block; width: var(--font-clock-digit); text-align: center; letter-spacing: 0; }
 .is-font-switch .home .ph-name,.is-font-switch .home .clock,.is-font-switch .home .tile .label,.is-font-switch .home .u-label,.is-font-switch .home .app-focus-name,.is-font-switch .home .util-focus-label{animation:font-in 160ms linear}
 @keyframes font-in{from{opacity:0}}
 @media(prefers-reduced-motion:reduce){.is-font-switch .home .ph-name,.is-font-switch .home .clock,.is-font-switch .home .tile .label,.is-font-switch .home .u-label,.is-font-switch .home .app-focus-name,.is-font-switch .home .util-focus-label{animation-duration:120ms}}

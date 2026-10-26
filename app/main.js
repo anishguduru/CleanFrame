@@ -4,14 +4,14 @@
 
   /* ---------- Bundled data ---------- */
   var ASSETS = 'assets/', ICONS = ASSETS + 'icons/', WP = ASSETS + 'wallpapers/';
-  var CAP = 50, SCRIM_Y = 560;
+  var CAP = 11, SCRIM_Y = 560;
   var DOCK_MODES = { both: { tw: 288, th: 200, pitch: 296 }, text: { tw: 288, th: 104, pitch: 296 }, icons: { tw: 176, th: 144, pitch: 184 } };
   var GRID_ROW = 240, GRID_COL = 344, COLS = 5;
   var ED_ROW = 80, ED_SEP = 56, ED_VIEW = 752, STRIP_PITCH = 188;
   var PH_TOP = 220, PH_PITCH = 128, PH_FULL = 5, PH_HEIGHT = 944, PH_COMPACT_TOP = 144, PH_COMPACT_PITCH = 88, PH_COMPACT_VISIBLE = 9;
   var WALL_VISIBLE = 6, WALL_ROW = 92, WALL_DELAY = 200;
   var KEYS = { 37: 'left', 38: 'up', 39: 'right', 40: 'down', 13: 'ok', 27: 'back', 8: 'back', 10009: 'back', 461: 'back' };
-  var FULL = 'Home is full. Remove an app first.', LAST = 'Home needs one app';
+  var FULL = 'Home holds 11 apps. Remove one first.', LAST = 'Home needs one app';
 
   var PRIMARY_APPS = [
     { id: 'netflix', name: 'Netflix', mark: true, appId: 'org.tizen.netflix-app' },
@@ -135,7 +135,7 @@
   }
   /* Optical placement is identical for the CSS mask and the image fallback. */
   function markHtml(id, w, h, size) {
-    var m = window.FrameIconMetrics && window.FrameIconMetrics[id], st;
+    var m = window.FrameIconMetrics && (window.FrameIconMetrics[id] || (id === 'allapps' ? window.FrameIconMetrics['apps'] : null)), st;
     if (m) {
       var weight = clamp(Math.pow(0.45 / m.fill, 0.3), 0.84, 1.25);
       var k = Math.min(w / m.w, h / m.h, size * weight / Math.sqrt(m.w * m.h)), s = m.n * k;
@@ -394,10 +394,14 @@
     return esc(S.note || def);
   }
 
+  function hasUnaddedApps() {
+    return otherList().length > 0;
+  }
+
   function homeItems() {
-    var h = S.c.home;
-    if (h.length <= 12) return h.slice();
-    return h.slice(0, 11).concat(['allapps']);
+    var h = S.c.home.slice(0, 11);
+    if (hasUnaddedApps()) return h.concat(['allapps']);
+    return h;
   }
 
   function ensureSel() {
@@ -730,8 +734,7 @@
   function editorCut() { return 999; }
   function editorHomeY(i) { return i * ED_ROW; }
   function editorOtherY(j) {
-    var o = otherGroups();
-    return j * ED_ROW + (o.recent.length ? ED_SEP : 0) + (o.recent.length && j >= o.recent.length ? ED_SEP : 0);
+    return j * ED_ROW;
   }
   function rememberOther(t) {
     var list = otherList();
@@ -755,10 +758,10 @@
     sheet: true,
     norm: function (t) {
       var f = t.f, nh = (t.lifted ? t.lifted.order : S.c.home).length, no = otherList().length;
-      f.i = clamp(f.i, 0, Math.max(0, nh - 1));
+      f.i = clamp(f.i, 0, nh);
       f.j = clamp(f.j, 0, Math.max(0, no - 1));
       if (f.zone === 'home' && !nh) f.zone = no ? 'other' : 'head';
-      if (f.zone === 'other' && !no) f.zone = nh ? 'home' : 'head';
+      if (f.zone === 'other' && !no) f.zone = 'home';
     },
     key: function (t, k) {
       var f = t.f, H = t.lifted ? t.lifted.order : S.c.home, O = otherList(), nh = H.length, no = O.length, d, tmp;
@@ -777,24 +780,30 @@
         else if (k === 'ok') { begin(); if (f.h === 0) closeEditor(t); else undoLast(null); }
       } else if (f.zone === 'home') {
         if (k === 'up') { if (f.i > 0) f.i--; else { f.zone = 'head'; f.h = 0; } }
-        else if (k === 'down') { if (f.i < nh - 1) f.i++; }
-        else if (k === 'right') { if (f.part === 'name') f.part = 'remove'; else if (no) returnOther(t); }
+        else if (k === 'down') { if (f.i < nh) f.i++; }
+        else if (k === 'right') { if (f.i < nh && f.part === 'name') f.part = 'remove'; else if (no) returnOther(t); }
         else if (k === 'left') { if (f.part === 'remove') f.part = 'name'; }
         else if (k === 'ok') {
-          begin();
-          if (f.part === 'name') t.lifted = { id: H[f.i], from: f.i, order: H.slice(), snap: snap() };
-          else editorRemove(t, H[f.i]);
+          if (f.i < nh) {
+            begin();
+            if (f.part === 'name') t.lifted = { id: H[f.i], from: f.i, order: H.slice(), snap: snap() };
+            else editorRemove(t, H[f.i]);
+          }
         }
       } else {
         if (k === 'up') { if (f.j > 0) { f.j--; rememberOther(t); } else { f.zone = 'head'; f.h = 1; } }
         else if (k === 'down') { if (f.j < no - 1) { f.j++; rememberOther(t); } }
-        else if (k === 'left') { if (nh) { rememberOther(t); f.i = nearestHome(t, nh); f.zone = 'home'; f.part = 'name'; } }
+        else if (k === 'left') { if (nh) { rememberOther(t); f.i = Math.min(nearestHome(t, nh), nh - 1); f.zone = 'home'; f.part = 'name'; } }
         else if (k === 'ok') { begin(); editorAdd(t, O[f.j]); }
       }
     },
     point: function (t, z, i) {
       if (t.lifted) { if (z === 'name' && i === t.f.i) this.key(t, 'ok'); return; }
-      if (z === 'name' || z === 'remove') { t.f.zone = 'home'; t.f.i = i; t.f.part = z; }
+      if (z === 'name' || z === 'remove') {
+        if (i < S.c.home.length || z === 'name') {
+          t.f.zone = 'home'; t.f.i = i; t.f.part = (i < S.c.home.length ? z : 'name');
+        }
+      }
       else if (z === 'other') { t.f.zone = 'other'; t.f.j = i; rememberOther(t); }
       else if (z === 'head') { t.f.zone = 'head'; t.f.h = i; }
       else return;
@@ -805,7 +814,7 @@
   function editorRemove(t, id) {
     if (!homeRemove(id)) return;
     t.f.zone = 'other'; t.f.j = otherList().indexOf(id);
-    S.note = app(id).name + ' is in Recently removed. OK puts it back.';
+    S.note = null;
   }
   function editorAdd(t, id) {
     rememberOther(t);
@@ -813,7 +822,7 @@
     var remaining = otherList(), at = clamp(t.otherReturn.index, 0, Math.max(0, remaining.length - 1));
     t.otherReturn.id = remaining[at] || null; t.otherReturn.index = at;
     t.f.zone = 'home'; t.f.i = S.c.home.indexOf(id); t.f.part = 'remove';
-    S.note = app(id).name + ' is on Home, position ' + (t.f.i + 1) + '.';
+    S.note = null;
   }
   function editorPlace(t) {
     var L = t.lifted;
@@ -821,7 +830,7 @@
     if (same(L.order, S.c.home)) { t.lifted = null; return; }
     if (!homeMove(L.order.slice(), L.id, L.snap)) return;
     t.lifted = null;
-    S.note = app(L.id).name + ' moved to position ' + (t.f.i + 1) + '.';
+    S.note = null;
   }
   function closeEditor() { clearSession(); pop(); }
 
@@ -1048,7 +1057,10 @@
     appliedFont = id; appliedFontMetrics = metrics;
     var values = { 'display-family': '"' + f.family + '"', 'ui-family': '"' + ui.family + '"', 'primary-family': '"' + primary.family + '"', 'display-weight': f.display, 'ui-weight': ui.weight, 'primary-weight': primary.weight, 'clock-weight': f.clock,
       'clock-shift': px(fontShift('clock', 48)), 'utility-shift': px(fontShift('ui', 28)), 'action-shift': px(fontShift('ui', 30)), 'heading-shift': px(fontShift('ui', 48)), 'full-name-shift': px(fontShift('primary', 30)), 'clock-digit': px(metrics ? metrics.digitCell : 0) };
-    Object.keys(values).forEach(function (key) { homeEl.style.setProperty('--font-' + key, String(values[key])); });
+    Object.keys(values).forEach(function (key) {
+      stage.style.setProperty('--font-' + key, String(values[key]));
+      homeEl.style.setProperty('--font-' + key, String(values[key]));
+    });
   }
 
   function homeState(t) {
@@ -1430,11 +1442,15 @@
         + (section.title ? '<h3 class="setting-label" id="setting-' + section.id + '">' + section.title + '</h3>' : '')
         + '<div class="setting-options"' + (section.items[0].axis ? ' role="radiogroup" aria-label="' + esc(section.title || LOOK_NAMES[section.id] || DETAIL_NAMES[t.group]) + '"' : '') + '>'
         + section.items.map(function (item) {
-          var swatch = item.axis === 'bg', body = '';
+          var swatch = item.axis === 'bg', body = '', fontStyle = '';
           if (swatch || item.thumbnail) body += item.value === 'light' || item.value === 'dark'
             ? '<span class="setting-swatch swatch-' + item.value + '" aria-hidden="true"></span>'
             : '<img class="setting-swatch" src="' + WP + S.c.wall + '-thumb.jpg" alt="">';
-          body += '<span class="setting-copy"><span class="setting-name">' + esc(item.label) + '</span>'
+          if (item.axis === 'font' && FONTS[item.value]) {
+            var fObj = FONTS[item.value];
+            fontStyle = ' style="font-family:\'' + fObj.family + '\', ' + (item.value === 'newsreader' ? 'serif;font-variation-settings:\'opsz\' 36' : 'sans-serif') + ';font-weight:' + fObj.ui + '"';
+          }
+          body += '<span class="setting-copy"><span class="setting-name"' + fontStyle + '>' + esc(item.label) + '</span>'
             + (item.description ? '<span class="setting-description">' + esc(item.description) + '</span>' : '') + '</span>';
           if (!item.axis) body += icon('right', 'setting-forward');
           return command(item, body, item.description ? 'has-description' : '');
@@ -1573,16 +1589,28 @@
     editor: function (t, el) {
       var f = t.f, H = t.lifted ? t.lifted.order : S.c.home, O = otherGroups(), list = O.recent.concat(O.rest), full = S.c.home.length >= CAP;
       var entries = [], ys = [], y = 0, yf, minTop, maxTop = 0, rowEnd, before = false, afterRows = false, hTop = 0;
-      var hint = catalog.error ? catalog.error : catalog.loading ? 'Loading installed apps…' : f.zone === 'head' && f.h === 1 ? undoCaption() : f.zone === 'home' && f.part === 'remove' ? (H.length <= 1 ? LAST : '') : '';
-      setHTML(el.sub, editStatus(hint, t.lifted ? 'Moving ' + app(t.lifted.id).name + '. OK places it, Back puts it back.' : ''));
+      var hasUnadded = hasUnaddedApps();
+      setHTML(el.sub, '');
       setHTML(el.back, '<button type="button" tabindex="-1" class="setting-choice setting-back' + (f.zone === 'head' && f.h === 0 ? ' is-focus' : '') + '" data-z="head" data-i="0" data-action="editor.done">' + icon('left') + '<span>Settings</span></button>');
       setHTML(el.head, headButtons([['undo', 'Undo', S.undo.length ? '' : 'is-idle', 'undo']], f.zone === 'head' && f.h === 1 ? 0 : -1, 'editor'));
       el.head.className = 's-head' + (f.zone === 'head' ? ' is-awake' : '');
       setHTML(el.lh, 'On Home <span class="s-count">' + S.c.home.length + ' of ' + CAP + '</span>');
       if (f.zone === 'home' && f.i >= 9) hTop = (f.i - 8) * ED_ROW;
 
-      keyed(el.home, H.map(function (id) { return { key: id, id: id }; }), function (row, it, i) {
+      var homeRows = H.map(function (id) { return { key: id, id: id, isFixed: false }; });
+      homeRows.push({ key: 'allapps-fixed', id: 'allapps', isFixed: true });
+
+      keyed(el.home, homeRows, function (row, it, i) {
         var a = app(it.id), here = f.zone === 'home' && i === f.i, lifted = !!t.lifted && i === f.i;
+        if (it.isFixed) {
+          setContent(row, 'fixed-allapps', '<div class="er-name" role="button"><span class="panel-content"><span class="er-num"></span>' + smallMark(a) + '<span class="er-text">' + esc(a.name) + '</span></span></div><div class="er-rm"></div>');
+          row.className = 'er is-fixed' + (here ? ' is-active' : '') + (hasUnadded ? '' : ' is-disabled');
+          row.style.transform = 'translate3d(0,' + editorHomeY(i) + 'px,0)';
+          row.querySelector('.er-num').textContent = '';
+          row.firstChild.className = 'er-name' + (here && f.part === 'name' ? ' is-focus' : '');
+          attrs(row.firstChild, 'name', i, 'editor.allapps');
+          return;
+        }
         setContent(row, it.id, '<div class="er-name" role="button"><span class="panel-content"><span class="er-num"></span>' + smallMark(a) + '<span class="er-text">' + esc(a.name) + '</span><span class="er-move">' + icon('updown') + '</span></span></div><div class="er-rm" role="button"><span></span></div>');
         row.className = 'er' + (here ? ' is-active' : '') + (lifted ? ' is-lifted' : '');
         row.style.transform = 'translate3d(' + (lifted ? 16 : 0) + 'px,' + editorHomeY(i) + 'px,0)';
@@ -1597,12 +1625,9 @@
       el.origin.className = 'ed-origin' + (t.lifted && t.lifted.from !== f.i ? ' is-on' : '');
       if (t.lifted) el.origin.style.transform = 'translate3d(0,' + (264 + editorHomeY(t.lifted.from) - hTop + 16) + 'px,0)';
 
-      if (O.recent.length) { entries.push({ key: 'sep-recent', sep: 'Recently removed', y: y }); y += ED_SEP; }
-      O.recent.forEach(function (id) { entries.push({ key: id, id: id, y: y }); ys.push(y); y += ED_ROW; });
-      if (O.recent.length && O.rest.length) { entries.push({ key: 'sep-rest', sep: 'Other installed apps', y: y }); y += ED_SEP; }
-      O.rest.forEach(function (id) { entries.push({ key: id, id: id, y: y }); ys.push(y); y += ED_ROW; });
+      list.forEach(function (id) { entries.push({ key: id, id: id, y: y }); ys.push(y); y += ED_ROW; });
       if (f.zone === 'other' && ys.length) {
-        yf = ys[f.j] - (O.recent.length && (f.j === 0 || f.j === O.recent.length) ? ED_SEP : 0);
+        yf = ys[f.j];
         if (yf < t.top) t.top = yf;
         if (ys[f.j] + 72 > t.top + ED_VIEW) {
           minTop = ys[f.j] + 72 - ED_VIEW;
@@ -1614,10 +1639,9 @@
       keyed(el.other, entries, function (row, it) {
         var j, focus, a;
         row.style.transform = 'translate3d(0,' + it.y + 'px,0)';
-        rowEnd = it.y + (it.sep ? ED_SEP : 72);
+        rowEnd = it.y + 72;
         row.style.visibility = it.y >= t.top && rowEnd <= t.top + ED_VIEW ? 'visible' : 'hidden';
         before = before || it.y < t.top; afterRows = afterRows || rowEnd > t.top + ED_VIEW;
-        if (it.sep) { setContent(row, 'sep|' + it.sep, esc(it.sep)); row.className = 'eo-sep'; return; }
         j = list.indexOf(it.id); focus = f.zone === 'other' && j === f.j; a = app(it.id);
         setContent(row, it.id, '<span class="panel-content">' + smallMark(a) + '<span class="eo-text">' + esc(a.name) + '</span><span class="eo-verb"></span></span>');
         row.querySelector('.eo-verb').innerHTML = focus ? '<span class="verb' + (full ? ' is-off' : '') + '">' + (full ? 'Home is full' : 'Add to Home') + '</span>' : '';
