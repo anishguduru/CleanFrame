@@ -1915,6 +1915,22 @@
     if (document.hidden) { pauseRotation(); clearTimeout(clockTimer); }
     else { release(); after(); updateClock(); focusStage(); }
   });
+  if (window.tizen && window.tizen.application) {
+    try {
+      var currentApp = tizen.application.getCurrentApplication();
+      if (currentApp && currentApp.addEventListener) {
+        currentApp.addEventListener('appcontrol', function () {
+          release();
+          if (top().id !== 'home' && top().id !== 'editor' && top().id !== 'appearance' && top().id !== 'wallpaper') {
+            goScene('home');
+          }
+          after();
+          updateClock();
+          focusStage();
+        });
+      }
+    } catch (e) {}
+  }
   window.addEventListener('resize', fit);
 
   /* Readable browser checks use the real state and actions, without fake outcomes. */
