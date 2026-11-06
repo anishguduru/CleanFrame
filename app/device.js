@@ -35,20 +35,8 @@
   function launchApp(id, done) {
     if (!api()) { unavailable(done); return; }
     var finish = bounded(done);
-    try {
-      if (window.tizen && window.tizen.ApplicationControl) {
-        var control = new tizen.ApplicationControl('http://tizen.org/appcontrol/operation/default');
-        api().launchAppControl(control, id, function () { finish(null); }, function () {
-          try { api().launch(id, function () { finish(null); }, function (err) { finish(failure(err)); }); }
-          catch (e) { finish(failure(e)); }
-        }, null, 'SINGLE');
-      } else {
-        api().launch(id, function () { finish(null); }, function (err) { finish(failure(err)); });
-      }
-    } catch (err) {
-      try { api().launch(id, function () { finish(null); }, function (e) { finish(failure(e)); }); }
-      catch (e) { finish(failure(e)); }
-    }
+    try { api().launch(id, function () { finish(null); }, function (err) { finish(failure(err)); }); }
+    catch (err) { finish(failure(err)); }
   }
   function launch(brand, done) {
     if (!IDS[brand]) { done({message: 'This app has no launch target.'}); return; }
@@ -60,7 +48,7 @@
     try {
       var data = [new tizen.ApplicationControlData('mode', ['fullscreen']), new tizen.ApplicationControlData('requester', ['mobile'])];
       var control = new tizen.ApplicationControl('http://tizen.org/appcontrol/operation/default', null, null, null, data);
-      api().launchAppControl(control, 'org.tizen.art-app', function () { finish(null); }, function (err) { finish(failure(err)); }, null, 'SINGLE');
+      api().launchAppControl(control, 'org.tizen.art-app', function () { finish(null); }, function (err) { finish(failure(err)); });
     } catch (err) { finish(failure(err)); }
   }
   function home(done) { launchApp('com.samsung.tv.csfs', done); }

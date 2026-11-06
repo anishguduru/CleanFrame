@@ -1915,33 +1915,6 @@
     if (document.hidden) { pauseRotation(); clearTimeout(clockTimer); }
     else { release(); after(); updateClock(); focusStage(); }
   });
-  function handleAppControl() {
-    heldKeys = {};
-    release();
-    try {
-      if (window.tizen && window.tizen.application) {
-        var current = tizen.application.getCurrentApplication();
-        if (current && current.getRequestedAppControl) {
-          current.getRequestedAppControl();
-        }
-      }
-    } catch (e) {}
-    if (top().id !== 'home') goScene('home');
-    after();
-    updateClock();
-    focusStage();
-  }
-  window.addEventListener('appcontrol', handleAppControl);
-  document.addEventListener('appcontrol', handleAppControl);
-  window.addEventListener('pageshow', handleAppControl);
-  if (window.tizen && window.tizen.application) {
-    try {
-      var currentApp = tizen.application.getCurrentApplication();
-      if (currentApp && currentApp.addEventListener) {
-        currentApp.addEventListener('appcontrol', handleAppControl);
-      }
-    } catch (e) {}
-  }
   window.addEventListener('resize', fit);
 
   /* Readable browser checks use the real state and actions, without fake outcomes. */
