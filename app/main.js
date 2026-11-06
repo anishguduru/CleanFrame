@@ -1918,6 +1918,14 @@
   function handleAppControl() {
     heldKeys = {};
     release();
+    try {
+      if (window.tizen && window.tizen.application) {
+        var current = tizen.application.getCurrentApplication();
+        if (current && current.getRequestedAppControl) {
+          current.getRequestedAppControl();
+        }
+      }
+    } catch (e) {}
     if (top().id !== 'home') goScene('home');
     after();
     updateClock();
@@ -1925,6 +1933,7 @@
   }
   window.addEventListener('appcontrol', handleAppControl);
   document.addEventListener('appcontrol', handleAppControl);
+  window.addEventListener('pageshow', handleAppControl);
   if (window.tizen && window.tizen.application) {
     try {
       var currentApp = tizen.application.getCurrentApplication();
@@ -1968,6 +1977,11 @@
   /* ---------- Start ---------- */
   cueL.innerHTML = icon('left'); cueR.innerHTML = icon('right');
   initialise();
-  setLook({}, { transient: true, startup: true });
+  if (S.c.bg === 'photo') {
+    IMG.photo.src = WP + S.c.wall + '.jpg';
+    S.shown = lookOf(S.c);
+    S.bundleKey = bundleKey(S.c);
+  }
   norm(); render(); fit(); focusStage(); updateClock(); syncRotation();
+  setLook({}, { transient: true, startup: true });
 })();

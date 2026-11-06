@@ -8,6 +8,16 @@
 <link rel="stylesheet" href="assets/typefaces.css">
 <link rel="stylesheet" href="assets/private-fonts.css">
 <link rel="stylesheet" href="style.css">
+<script>
+try {
+  var _raw = localStorage.getItem('cleanframe.home.v1');
+  if (_raw) {
+    var _saved = JSON.parse(_raw);
+    var _wall = _saved.look && _saved.look.wall || _saved.wallpaper || 'misty';
+    document.write('<style>#photo{background-image:url(assets/wallpapers/' + _wall + '.jpg);background-size:cover;background-position:50% 50%}</style>');
+  }
+} catch (e) {}
+</script>
 </head>
 <body>
       <main class="stage" id="stage" tabindex="0" aria-label="TV stage, 1920 by 1080. Click it, then use the arrow keys, Enter for OK and Escape for Back.">
