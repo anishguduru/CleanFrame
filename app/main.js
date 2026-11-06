@@ -1915,19 +1915,21 @@
     if (document.hidden) { pauseRotation(); clearTimeout(clockTimer); }
     else { release(); after(); updateClock(); focusStage(); }
   });
+  function handleAppControl() {
+    heldKeys = {};
+    release();
+    if (top().id !== 'home') goScene('home');
+    after();
+    updateClock();
+    focusStage();
+  }
+  window.addEventListener('appcontrol', handleAppControl);
+  document.addEventListener('appcontrol', handleAppControl);
   if (window.tizen && window.tizen.application) {
     try {
       var currentApp = tizen.application.getCurrentApplication();
       if (currentApp && currentApp.addEventListener) {
-        currentApp.addEventListener('appcontrol', function () {
-          release();
-          if (top().id !== 'home' && top().id !== 'editor' && top().id !== 'appearance' && top().id !== 'wallpaper') {
-            goScene('home');
-          }
-          after();
-          updateClock();
-          focusStage();
-        });
+        currentApp.addEventListener('appcontrol', handleAppControl);
       }
     } catch (e) {}
   }
